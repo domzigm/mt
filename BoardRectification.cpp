@@ -1,3 +1,10 @@
+/*
+ *
+ * (c) domzigm 2016 - GPLv3
+ * https://github.com/domzigm/mt
+ * 
+ */
+
 #include "BoardRectification.h"
 
 using namespace cv;

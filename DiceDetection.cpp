@@ -5,7 +5,7 @@
  * 
  */
  
-#include "DiceDetecion.h"
+#include "DiceDetection.h"
 
 using namespace cv;
 
@@ -104,7 +104,7 @@ uint8_t DiceDetection::processImage(Mat& inputImage)
 		}
 	}
 
-	return (dices.size > 0);
+	return (dices.size() > 0);
 }
 
 void DiceDetection::getResult(uint32_t& dices, uint32_t& eyes)
