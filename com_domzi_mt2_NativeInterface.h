@@ -7,85 +7,99 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    init
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_init
-  (JNIEnv *, jobject);
+#undef com_domzi_mt2_NativeInterface_RETURN_OK
+#define com_domzi_mt2_NativeInterface_RETURN_OK 0L
+#undef com_domzi_mt2_NativeInterface_REMOTE_NOT_PRESSED
+#define com_domzi_mt2_NativeInterface_REMOTE_NOT_PRESSED -1L
+#undef com_domzi_mt2_NativeInterface_REMOTE_NOT_DETECTED
+#define com_domzi_mt2_NativeInterface_REMOTE_NOT_DETECTED -2L
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    init
+	* Signature: ()V
+	*/
+	JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_init
+	(JNIEnv *, jobject);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    captureImage
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_captureImage
-  (JNIEnv *, jobject);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    updateImage
+	* Signature: (J)V
+	*/
+	JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_updateImage
+	(JNIEnv *, jobject, jlong);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    registerArea
- * Signature: ([F)I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerArea
-  (JNIEnv *, jobject, jfloatArray);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    detectBoard
+	* Signature: ()I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_detectBoard
+	(JNIEnv *, jobject);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    setDiceRoi
- * Signature: ([F)I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_setDiceRoi
-  (JNIEnv *, jobject, jfloatArray);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    registerArea
+	* Signature: ([F)I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerArea
+	(JNIEnv *, jobject, jfloatArray);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    registerRemote
- * Signature: ([I)I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerRemote
-  (JNIEnv *, jobject, jintArray);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    setDiceRoi
+	* Signature: ([F)I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_setDiceRoi
+	(JNIEnv *, jobject, jfloatArray);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    getRemote
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getRemote
-  (JNIEnv *, jobject, jint);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    registerRemote
+	* Signature: ([I)I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerRemote
+	(JNIEnv *, jobject, jintArray);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    registerFigure
- * Signature: ([I)I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerFigure
-  (JNIEnv *, jobject, jintArray);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    getRemote
+	* Signature: (I)I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getRemote
+	(JNIEnv *, jobject, jint);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    getFigure
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getFigure
-  (JNIEnv *, jobject, jint);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    registerFigure
+	* Signature: ([I)I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerFigure
+	(JNIEnv *, jobject, jintArray);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    getDice
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getDice
-  (JNIEnv *, jobject);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    getFigure
+	* Signature: (I)I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getFigure
+	(JNIEnv *, jobject, jint);
 
-/*
- * Class:     com_domzi_mt2_NativeInterface
- * Method:    getEyes
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getEyes
-  (JNIEnv *, jobject);
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    getDice
+	* Signature: ()I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getDice
+	(JNIEnv *, jobject);
+
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    getEyes
+	* Signature: ()I
+	*/
+	JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getEyes
+	(JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

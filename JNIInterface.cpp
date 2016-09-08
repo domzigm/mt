@@ -7,9 +7,11 @@
 
 #include "com_domzi_mt2_NativeInterface.h"
 
+#include "Common.h"
 #include "BoardRectification.h"
 #include "DiceDetection.h"
 #include "FigureDetection.h"
+#include "RemoteDetection.h"
 #include "HelperRoutines.h"
 
 // Get Image (always)
@@ -29,8 +31,8 @@ using namespace cv;
 using namespace mt;
 
 std::vector<Rect2f> areas;
-std::vector<figureDescription> figures;
-std::vector<figureDescription> remotes;
+std::vector<colorDescription> figures;
+std::vector<colorDescription> remotes;
 
 const BoardRectificationConfig boardRectificationDefault = { 0 };
 BoardRectificationConfig boardRectificationConfig = boardRectificationDefault;
@@ -43,12 +45,16 @@ DiceDetection diceDetection(diceDetectionConfig);
 const Rect2f diceDetectionROIDefault = { 0.f, 0.f, 1.f, 1.f };
 Rect2f diceDetectionROI = diceDetectionROIDefault;
 
+const RemoteDetectionConfig remoteDetectionDefault = { 0 };
+RemoteDetectionConfig remoteDetectionConfig = remoteDetectionDefault;
+RemoteDetection remoteDetection(remoteDetectionConfig);
+
 Mat capturedImage;
 Mat rectifiedImage;
 
 void captureImage(Mat& image)
 {
-
+	(void)image;
 }
 
 ////////////////////////
@@ -77,11 +83,20 @@ enum {
 	POS_V_HI
 };
 
-extern "C"
+JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_updateImage
+(JNIEnv *env, jobject obj, jlong matObj)
+{
+	cv::Mat* inputMat = (cv::Mat*)matObj;
+	inputMat->copyTo(capturedImage);
+}
+
 JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_init
 (JNIEnv *env, jobject obj)
 {
+	(void)env;
+	(void)obj;
 	boardRectificationConfig = boardRectificationDefault;
+	remoteDetectionConfig = remoteDetectionDefault;
 	diceDetectionConfig = diceDetectionDefault;
 	diceDetectionROI = diceDetectionROIDefault;
 	figures.clear();
@@ -89,34 +104,34 @@ JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_init
 	areas.clear();
 }
 
-extern "C"
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_captureImage
+JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_updateImage
 (JNIEnv *env, jobject obj)
 {
-	// Get image from camera
-	captureImage(capturedImage);
+	(void)env;
+	(void)obj;
 
 	// Detect board markers
 	if (boardRectification.updateBoard(capturedImage)) {
 
 		// Rectify the image
 		boardRectification.rectifyImage(capturedImage, rectifiedImage);
-		return ERR_OKAY;
+		return com_domzi_mt2_NativeInterface_RETURN_OK;
 	}
 	return ERR_NO_BOARD;
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerArea
 (JNIEnv *env, jobject obj, jfloatArray arr)
 {
+	(void)obj;
+
 	// Check if enough arguments are supplied
 	if (RECT_ARG_CNT != env->GetArrayLength(arr)) {
 		return ERR_COORD_INVALID;
 	}
 	
 	// Get values
-	auto vals = env->GetFloatArrayElements(arr, false);
+	auto vals = env->GetFloatArrayElements(arr, 0);
 
 	// Check if one value is >100%
 	if (vals[0] > 1.f || vals[1] > 1.f || vals[2] > 1.f || vals[3] > 1.f) {
@@ -143,17 +158,18 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerArea
 	return (jint)(areas.size() - 1);
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_setDiceRoi
 (JNIEnv *env, jobject obj, jfloatArray arr)
 {
+	(void)obj;
+
 	// Check if enough arguments are supplied
 	if (RECT_ARG_CNT != env->GetArrayLength(arr)) {
 		return ERR_COORD_INVALID;
 	}
 
 	// Get values
-	auto vals = env->GetFloatArrayElements(arr, false);
+	auto vals = env->GetFloatArrayElements(arr, 0);
 
 	// Check if one value is >100%
 	if (vals[0] > 1.f || vals[1] > 1.f || vals[2] > 1.f || vals[3] > 1.f) {
@@ -169,20 +185,21 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_setDiceRoi
 	Rect2f newROI(vals[0], vals[1], vals[2], vals[3]);
 	diceDetectionROI = newROI;
 
-	return ERR_OKAY;
+	return com_domzi_mt2_NativeInterface_RETURN_OK;
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerRemote
 (JNIEnv *env, jobject obj, jintArray arr)
 {
+	(void)obj;
+
 	// Check if enough arguments are supplied
 	if (SCALAR_ARG_CNT != env->GetArrayLength(arr)) {
 		return ERR_OUTOFRANGE;
 	}
 
 	// Get values
-	auto vals = env->GetIntArrayElements(arr, false);
+	auto vals = env->GetIntArrayElements(arr, 0);
 
 	// Range check values
 	if (vals[POS_H_LO] < 0 || vals[POS_H_LO] > vals[POS_H_HI] || vals[POS_H_HI] > HSV_H_MAX) {
@@ -196,7 +213,7 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerRemote
 	}
 
 	// Create new figure description
-	figureDescription desc;
+	colorDescription desc;
 	desc.lowerThreshold = Scalar(vals[POS_H_LO], vals[POS_S_LO], vals[POS_V_LO]);
 	desc.upperThreshold = Scalar(vals[POS_H_HI], vals[POS_S_HI], vals[POS_V_HI]);
 	remotes.push_back(desc);
@@ -204,29 +221,51 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerRemote
 	return (jint)(remotes.size() - 1);
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getRemote
 (JNIEnv *env, jobject obj, jint val)
 {
+	(void)env;
+	(void)obj;
+
 	// Check if index is available
 	if (val >= remotes.size()) {
 		return ERR_OUTOFRANGE;
 	}
 
-	return -1l;
+	jint retVal = -2l;
+	uint8_t remoteStatus = 0;
+
+	auto ret = remoteDetection.getRemoteStatus(remotes[val], rectifiedImage, remoteStatus);
+
+	switch (ret)
+	{
+	case REMOTE_BUTTON_PRESSED:
+		retVal = (jint)remoteStatus;
+		break;
+	case REMOTE_NOT_PRESSED:
+		retVal = com_domzi_mt2_NativeInterface_REMOTE_NOT_PRESSED;
+		break;
+	case REMOTE_NOT_DETECTED:
+	default:
+		retVal = com_domzi_mt2_NativeInterface_REMOTE_NOT_DETECTED;
+		break;
+	}
+
+	return remoteStatus;
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerFigure
 (JNIEnv *env, jobject obj, jintArray arr)
 {
+	(void)obj;
+
 	// Check if enough arguments are supplied
 	if (SCALAR_ARG_CNT != env->GetArrayLength(arr)) {
 		return ERR_OUTOFRANGE;
 	}
 
 	// Get values
-	auto vals = env->GetIntArrayElements(arr, false);
+	auto vals = env->GetIntArrayElements(arr, 0);
 
 	// Range check values
 	if (vals[POS_H_LO] < 0 || vals[POS_H_LO] > vals[POS_H_HI] || vals[POS_H_HI] > HSV_H_MAX) {
@@ -240,7 +279,7 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerFigure
 	}
 
 	// Create new figure description
-	figureDescription desc;
+	colorDescription desc;
 	desc.lowerThreshold = Scalar(vals[POS_H_LO], vals[POS_S_LO], vals[POS_V_LO]);
 	desc.upperThreshold = Scalar(vals[POS_H_HI], vals[POS_S_HI], vals[POS_V_HI]);
 	figures.push_back(desc);
@@ -248,10 +287,12 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerFigure
 	return (jint)(figures.size() - 1);
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getFigure
 (JNIEnv *env, jobject obj, jint val)
 {
+	(void)env;
+	(void)obj;
+
 	// Check if index is available
 	if (val >= figures.size()) {
 		return ERR_OUTOFRANGE;
@@ -285,10 +326,12 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getFigure
 	return ERR_FIGURE_NOTLOCATED;
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getDice
 (JNIEnv *env, jobject obj)
 {
+	(void)env;
+	(void)obj;
+
 	uint32_t dice = 0;
 	uint32_t eyes = 0;
 
@@ -299,15 +342,18 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getDice
 	roi.width = rectifiedImage.cols * diceDetectionROI.width;
 	roi.height = rectifiedImage.rows * diceDetectionROI.height;
 
-	diceDetection.processImage(rectifiedImage(roi));
+	Mat roiImage = rectifiedImage(roi);
+	diceDetection.processImage(roiImage);
 	diceDetection.getResult(dice, eyes);
 	return (jint)dice;
 }
 
-extern "C"
 JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getEyes
 (JNIEnv *env, jobject obj)
 {
+	(void)env;
+	(void)obj;
+
 	uint32_t dice = 0;
 	uint32_t eyes = 0;
 	diceDetection.getResult(dice, eyes);
