@@ -7,25 +7,20 @@
 
 #pragma once
 
-#include <opencv2/opencv.hpp>
-#include <stdint.h>
+#include "Common.h"
 
 namespace mt
 {
 
-//! See https://en.wikipedia.org/wiki/HSL_and_HSV
-struct hsvPlanes
-{
-	cv::Scalar loThreshold_Left;
-	cv::Scalar hiThreshold_Left;
-	cv::Scalar loThreshold_Right;
-	cv::Scalar hiThreshold_Right;
-};
+float slope(cv::Vec4i points);
+void bwEdgeDetection(const cv::Mat& srcImage, cv::Mat& dstImage, bool useHls = false, double lowerThres = 3.f, double upperThresh = 252.f);
 
-void inHsvRange(cv::Mat& srcImage, hsvPlanes& desc, cv::Mat& dstImage);
+void inHsvRange(const cv::Mat& srcImage, const hsvPlanes& desc, cv::Mat& dstImage);
+void inHsvRange(const cv::Mat& srcImage, const colorDescription& desc, cv::Mat& dstImage);
+void inHsvRange(const cv::Mat& srcImage, cv::Scalar lowThres, cv::Scalar highThres, cv::Mat& dstImage);
 
-void rectToRelative(cv::Mat& mapping, cv::Rect& input_rect, cv::Rect2f& output_rect);
-void rectToAbsolute(cv::Mat& mapping, cv::Rect2f& input_rect, cv::Rect& output_rect);
+void rectToRelative(const cv::Mat& mapping, const cv::Rect& input_rect, cv::Rect2f& output_rect);
+void rectToAbsolute(const cv::Mat& mapping, const cv::Rect2f& input_rect, cv::Rect& output_rect);
 
 void morphOps(cv::Mat& binaryImage);
 
