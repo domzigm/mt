@@ -24,14 +24,26 @@ struct BoardRectificationConfig
 	//! Height of the rectified image in pixels
 	int outputImageHeight;
 
-	//! Fixed size of the roi used for analysis
-	int analyzeRoiSize;
-
 	//! The source roi width in percent
 	float sourceRoiWidth;
 
 	//! The source roi height in percent
 	float sourceRoiHeight;
+
+	//! Scale factor for the analyze roi size
+	float analyzeRoiScale;
+
+	//! Boardedge detection canny
+	double cannyTh;
+
+	//! Boardedge detection houghline threshold
+	int houghTh;
+
+	//! Boardedge detection houhline minimum length
+	double houghMinLen;
+
+	//! Boardedge detection houghline maximum gap
+	double houghMaxGap;
 };
 
 }
