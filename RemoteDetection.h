@@ -8,7 +8,7 @@
 #pragma once
 
 #include "RemoteDetectionConfig.h"
-#include "HelperRoutines.h"
+#include "Common.h"
 
 namespace mt
 {
@@ -19,19 +19,19 @@ namespace mt
 		REMOTE_BUTTON_PRESSED
 	};
 
-class RemoteDetection
-{
-public:
+	class RemoteDetection
+	{
+	public:
 
-	RemoteDetection(RemoteDetectionConfig& config);
-	RemoteStatus getRemoteStatus(hsvPlanes& desc, cv::Mat& srcimage, uint8_t& buttonId);
+		RemoteDetection(RemoteDetectionConfig& config);
+		RemoteStatus getRemoteStatus(const colorDescription& desc, const cv::Mat& srcimage, uint8_t& buttonId);
 
-private:
+	private:
 
-	RemoteDetectionConfig&				m_config;
-	cv::SimpleBlobDetector::Params		m_sbdParams;
-	uint8_t								m_calibMarkerCount;
-	float								m_radiusTolerance;
-};
+		RemoteDetectionConfig&				m_config;
+		cv::SimpleBlobDetector::Params		m_sbdParams;
+		uint8_t								m_calibMarkerCount;
+		float								m_radiusTolerance;
+	};
 
 }
