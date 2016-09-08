@@ -12,9 +12,9 @@ using namespace cv;
 namespace mt
 {
 
-#define DEBUG
+#define DEBUG 0
 
-uint8_t DiceDetection::processImage(Mat& inputImage)
+uint8_t DiceDetection::processImage(const Mat& inputImage)
 {
 	Mat canny;
 	Mat temp1;
@@ -23,13 +23,16 @@ uint8_t DiceDetection::processImage(Mat& inputImage)
 	
 	std::vector<DiceCandidate> v_eyes;
 
-	eyeCounter = 0;
-	dices.clear();
+	m_eyeCounter = 0;
+	m_dices.clear();
 
 	cv::cvtColor(inputImage, temp1, cv::COLOR_BGR2GRAY);
 	cv::resize(temp1, temp2, Size(0, 0), m_config.scaleFactX, m_config.scaleFactY);
-	Canny(temp2, canny, m_config.cannyTh1, m_config.cannyTh2, 3);
+	Canny(temp2, canny, m_config.cannyTh1, m_config.cannyTh2, 3, true);
 	
+	Mat sm =  cv::getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
+	cv::morphologyEx(canny, canny, MORPH_CLOSE, sm);
+
 	for (int y = 0; y < canny.size().height; y += m_config.subSample)	{
     
 		uchar* row = canny.ptr(y);
@@ -38,25 +41,24 @@ uint8_t DiceDetection::processImage(Mat& inputImage)
 			if (row[x] <= 128) {
         
 				int area = floodFill(canny, Point(x, y), CV_RGB(0, 0, 160));
-				
 				if (area > m_config.fillThLow && area < m_config.fillThHigh) {
           
-#ifdef DEBUG
+#if DEBUG
 					floodFill(canny, Point(x, y), CV_RGB(0, 0, 255));
 #endif
 					dc.area = area;
 					dc.pt.x = x;
 					dc.pt.y = y;
-					dc.id = eyeCounter++;
+					dc.id = m_eyeCounter++;
 					v_eyes.push_back(dc);
 				}
 			}
 		}
 	}
 
-#ifdef DEBUG
+#if DEBUG
 	imshow("DiceDetection", canny);
-	//waitKey(0);
+	waitKey(0);
 #endif
 
 	// We've found all circles in the image
@@ -81,7 +83,7 @@ uint8_t DiceDetection::processImage(Mat& inputImage)
 		}
 
 		for (auto it = v_eyes.begin(); it != v_eyes.end(); ++it) {
-
+			
 			double distance = cv::norm(c.pt - it->pt);
 
 			if (distance < m_config.maxEyeDistance) {
@@ -89,9 +91,15 @@ uint8_t DiceDetection::processImage(Mat& inputImage)
 				neighbors.push_back(*it);
 				it = v_eyes.erase(it);
 				neighborFound = true;
+				
 				if (v_eyes.size() == 0) {
 					// There are no further eyes, so no neighbor can be further found
 					neighborFound = false;
+					break;
+				}
+
+				if (it == v_eyes.end()) {
+					// If the last element has been deleted
 					break;
 				}
 			}
@@ -99,58 +107,58 @@ uint8_t DiceDetection::processImage(Mat& inputImage)
 
 		if (neighborFound == false) {
 
-			dices.push_back(neighbors);
+			m_dices.push_back(neighbors);
 			neighbors.clear();
 		}
 	}
 
-	return (dices.size() > 0);
+	return 0;
 }
 
-void DiceDetection::getResult(uint32_t& dices, uint32_t& eyes)
+uint8_t DiceDetection::getResult(uint32_t& dices, uint32_t& eyes)
 {
-	dices = (uint32_t)this->dices.size();
-	eyes = this->eyeCounter;
+	dices = (uint32_t)m_dices.size();
+	eyes = m_eyeCounter;
+	return 0;
 }
 
-void DiceDetection::drawBoxes(cv::Mat& image)
+uint8_t DiceDetection::drawBoxes(cv::Mat& image)
 {
-	if(this->dices.size() > 0)
-	{
-		for (auto d = this->dices.begin(); d != this->dices.end(); ++d) {
+	for (auto d = m_dices.begin(); d != m_dices.end(); ++d) {
 
-			int radius = 0;
-			int minX = image.cols;
-			int minY = image.rows;
-			int maxX = 0;
-			int maxY = 0;
+		int radius = 0;
+		int minX = INT_MAX;
+		int minY = INT_MAX;
+		int maxX = 0;
+		int maxY = 0;
 
-			for (auto eyes = d->begin(); eyes != d->end(); ++eyes) {
+		for (auto eyes = d->begin(); eyes != d->end(); ++eyes) {
 
-				// A = PI * r²;
-				radius = (int)sqrt(eyes->area / CV_PI) + 1u;
-				maxX = MAX(maxX, eyes->pt.x);
-				minX = MIN(minX, eyes->pt.x);
-				maxY = MAX(maxY, eyes->pt.y);
-				minY = MIN(minY, eyes->pt.y);
-			}
-
-			// This is the basic box
-			Rect rc;
-			rc.x = minX - radius;
-			rc.y = minY;
-			rc.width  = maxX - minX + 2 * radius;
-			rc.height = maxY - minY + 2 * radius;
-			
-			// This is the maximum detection radius box
-			Rect rc2;
-			rc2.x = (int)(((rc.x + rc.width  / 2) - m_config.maxEyeDistance / 2) / m_config.scaleFactX);
-			rc2.y = (int)(((rc.y + rc.height / 2) - m_config.maxEyeDistance / 2) / m_config.scaleFactY);
-			rc2.width  = (int)(m_config.maxEyeDistance / m_config.scaleFactX);
-			rc2.height = (int)(m_config.maxEyeDistance / m_config.scaleFactY);
-			rectangle(image, rc2, cvScalar(0, 255, 0), 2);
+			// A = PI * r²;
+			radius = (int)sqrt(eyes->area / CV_PI) + 1u;
+			maxX = MAX(maxX, eyes->pt.x);
+			minX = MIN(minX, eyes->pt.x);
+			maxY = MAX(maxY, eyes->pt.y);
+			minY = MIN(minY, eyes->pt.y);
 		}
+
+		// This is the basic box
+		Rect rc;
+		rc.x = minX - radius;	// Scan from left to right, then top bottom
+		rc.y = minY;			// So only subtract radius in x direction but not in y direction
+		rc.width  = maxX - minX + 2 * radius;
+		rc.height = maxY - minY + 2 * radius;
+		
+		// This is the maximum detection radius box
+		Rect rc2;
+		rc2.x = (int)(((rc.x + rc.width  / 2) - m_config.maxEyeDistance / 2) / m_config.scaleFactX);
+		rc2.y = (int)(((rc.y + rc.height / 2) - m_config.maxEyeDistance / 2) / m_config.scaleFactY);
+		rc2.width  = (int)(m_config.maxEyeDistance / m_config.scaleFactX);
+		rc2.height = (int)(m_config.maxEyeDistance / m_config.scaleFactY);
+		rectangle(image, rc2, cvScalar(0, 255, 0), 2);
 	}
+
+	return 0;
 }
 
 }

@@ -28,14 +28,14 @@ public:
 	DiceDetection(DiceDetectionConfig& config) :
 		m_config(config) {};
 
-	uint8_t processImage(cv::Mat& sourceImage);
-	void getResult(uint32_t& dices, uint32_t& eyes);
-	void drawBoxes(cv::Mat& image);
+	uint8_t processImage(const cv::Mat& sourceImage);
+	uint8_t getResult(uint32_t& dices, uint32_t& eyes);
+	uint8_t drawBoxes(cv::Mat& image);
 
 private:
 	DiceDetectionConfig&	m_config;
-	uint32_t				eyeCounter;
-	std::vector< std::vector<DiceCandidate> > dices;
+	uint32_t				m_eyeCounter;
+	std::vector< std::vector<DiceCandidate> > m_dices;
 };
 
 }
