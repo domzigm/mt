@@ -24,10 +24,18 @@ extern "C" {
 	/*
 	* Class:     com_domzi_mt2_NativeInterface
 	* Method:    updateImage
-	* Signature: (J)V
+	* Signature: (JJ)V
 	*/
 	JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_updateImage
-	(JNIEnv *, jobject, jlong);
+	(JNIEnv *, jobject, jlong, jlong);
+
+	/*
+	* Class:     com_domzi_mt2_NativeInterface
+	* Method:    getPreviewImage
+	* Signature: ()J
+	*/
+	JNIEXPORT jlong JNICALL Java_com_domzi_mt2_NativeInterface_getPreviewImage
+	(JNIEnv *, jobject);
 
 	/*
 	* Class:     com_domzi_mt2_NativeInterface

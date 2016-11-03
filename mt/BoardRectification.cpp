@@ -40,14 +40,12 @@ void BoardRectification::rectifyImage(const Mat& cameraImage, Mat& rectifiedImag
 
 }
 
-bool BoardRectification::updateBoard(const cv::Mat& cameraImage)
+bool BoardRectification::updateBoard(const Mat& grayImage)
 {
 	int regionsFound = 0;
-	cv::Mat grayImage;
+
 	cv::Mat canny;
-	cv::cvtColor(cameraImage, grayImage, CV_RGB2GRAY);
 	cv::Point2f rectifyCoords[MARKER_MAX];
-	
 	const cv::Point2f coordEdges[MARKER_MAX] = {
 		
 		cv::Point2f(0.f,							0.f),
@@ -66,18 +64,21 @@ bool BoardRectification::updateBoard(const cv::Mat& cameraImage)
 		);
 
 		// Set ROI on gray image
-		Mat temp1 = grayImage(rect);
+		Mat roiImage = grayImage(rect);
+#if DEBUG
 		Mat temp2;
+		roiImage.copyTo(temp2);
+#endif
 		
 		float scale_x = m_config.analyzeRoiScale;
 		float scale_y = m_config.analyzeRoiScale;
 		
-#if 1
+#if 0
 		// Might be slower but more stable
-		bwEdgeDetection(cameraImage(rect), canny);
+		bwEdgeDetection(grayImage(rect), canny);
 #else
 		// Might be faster but more false positives
-		cv::Canny(temp1, canny, m_config.cannyTh, m_config.cannyTh, 3, true);
+		cv::Canny(roiImage, canny, m_config.cannyTh, m_config.cannyTh, 3, true);
 #endif
 
 		int lineH = 0, lineV = 0;
@@ -112,7 +113,7 @@ bool BoardRectification::updateBoard(const cv::Mat& cameraImage)
 		}
 
 		std::vector<Point2i> corners;
-		goodFeaturesToTrack(temp1, corners, 3, 0.8f, 5, noArray(), 7, true);
+		goodFeaturesToTrack(roiImage, corners, 3, 0.8f, 5, noArray(), 7, true);
 
 		// Calculate smallest distance from image edge to board corner
 		double minDistance = max(rect.width, rect.height);

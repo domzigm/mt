@@ -1,9 +1,9 @@
 /*
- *
- * (c) domzigm 2016 - GPLv3
- * https://github.com/domzigm/mt
- * 
- */
+*
+* (c) domzigm 2016 - GPLv3
+* https://github.com/domzigm/mt
+*
+*/
 
 #include "com_domzi_mt2_NativeInterface.h"
 
@@ -12,6 +12,7 @@
 #include "DiceDetection.h"
 #include "FigureDetection.h"
 #include "RemoteDetection.h"
+#include "ConfigParser.h"
 #include "HelperRoutines.h"
 
 // Get Image (always)
@@ -26,6 +27,10 @@
 // getFigure: getImage, rectifyImage*, return figure
 
 // every n-th call to rectifiyImage, recalculate the rectification
+
+// Profile application on PC
+// Profile application on Android
+// Check if hotspots can be optimized by OpenMP
 
 using namespace cv;
 using namespace mt;
@@ -49,7 +54,8 @@ const RemoteDetectionConfig remoteDetectionDefault = { 0 };
 RemoteDetectionConfig remoteDetectionConfig = remoteDetectionDefault;
 RemoteDetection remoteDetection(remoteDetectionConfig);
 
-Mat capturedImage;
+Mat g_grayImage;
+Mat g_rgbaImage;
 Mat rectifiedImage;
 
 void captureImage(Mat& image)
@@ -84,10 +90,16 @@ enum {
 };
 
 JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_updateImage
-(JNIEnv *env, jobject obj, jlong matObj)
+(JNIEnv *env, jobject obj, jlong grayImage, jlong rgbaImage)
 {
-	cv::Mat* inputMat = (cv::Mat*)matObj;
-	inputMat->copyTo(capturedImage);
+	((cv::Mat*)grayImage)->copyTo(g_grayImage);
+	((cv::Mat*)rgbaImage)->copyTo(g_rgbaImage);
+}
+
+JNIEXPORT jlong JNICALL Java_com_domzi_mt2_NativeInterface_getPreviewImage
+(JNIEnv * env, jobject obj)
+{
+	return (jlong)(&g_rgbaImage);
 }
 
 JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_init
@@ -104,17 +116,17 @@ JNIEXPORT void JNICALL Java_com_domzi_mt2_NativeInterface_init
 	areas.clear();
 }
 
-JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_updateImage
+JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_detectBoard
 (JNIEnv *env, jobject obj)
 {
 	(void)env;
 	(void)obj;
 
 	// Detect board markers
-	if (boardRectification.updateBoard(capturedImage)) {
+	if (boardRectification.updateBoard(g_rgbaImage)) {
 
 		// Rectify the image
-		boardRectification.rectifyImage(capturedImage, rectifiedImage);
+		boardRectification.rectifyImage(g_rgbaImage, rectifiedImage);
 		return com_domzi_mt2_NativeInterface_RETURN_OK;
 	}
 	return ERR_NO_BOARD;
@@ -129,7 +141,7 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_registerArea
 	if (RECT_ARG_CNT != env->GetArrayLength(arr)) {
 		return ERR_COORD_INVALID;
 	}
-	
+
 	// Get values
 	auto vals = env->GetFloatArrayElements(arr, 0);
 
@@ -306,7 +318,7 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getFigure
 	// Locate the figure
 	Rect figureRect;
 	if (0 != locateFigure(figures.at(val), rectifiedImage, figureRect)) {
-		
+
 		// Convert the position to relative
 		Rect2f relativeFigureRect;
 		rectToRelative(rectifiedImage, figureRect, relativeFigureRect);
@@ -314,7 +326,7 @@ JNIEXPORT jint JNICALL Java_com_domzi_mt2_NativeInterface_getFigure
 		// Iterate all areas
 		jint index = 0;
 		for (auto& area : areas) {
-			
+
 			// Return on intersection
 			if ((area & relativeFigureRect).area() > 0) {
 				return index;

@@ -23,8 +23,8 @@ public:
 		m_rectifyValid(false)
 	{};
 
-	bool updateBoard(const cv::Mat& cameraImage);
-	void rectifyImage(const cv::Mat& cameraImage, cv::Mat& rectifiedImage);
+	bool updateBoard(const cv::Mat& grayImage);
+	void rectifyImage(const cv::Mat& sourceImage, cv::Mat& rectifiedImage);
 
 	enum marker
 	{

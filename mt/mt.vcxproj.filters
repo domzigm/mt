@@ -41,9 +41,6 @@
     <ClInclude Include="BoardRectification.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="DiceDetecion.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="DiceDetectionConfig.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -60,6 +57,12 @@
       <Filter>Headerdateien</Filter>
     </ClInclude>
     <ClInclude Include="RemoteDetectionConfig.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="DiceDetection.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>

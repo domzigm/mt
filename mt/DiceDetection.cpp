@@ -14,11 +14,10 @@ namespace mt
 
 #define DEBUG 0
 
-uint8_t DiceDetection::processImage(const Mat& inputImage)
+uint8_t DiceDetection::processImage(const Mat& grayImage)
 {
 	Mat canny;
-	Mat temp1;
-	Mat temp2;
+	Mat resizedImage;
 	DiceCandidate dc;
 	
 	std::vector<DiceCandidate> v_eyes;
@@ -26,9 +25,8 @@ uint8_t DiceDetection::processImage(const Mat& inputImage)
 	m_eyeCounter = 0;
 	m_dices.clear();
 
-	cv::cvtColor(inputImage, temp1, cv::COLOR_BGR2GRAY);
-	cv::resize(temp1, temp2, Size(0, 0), m_config.scaleFactX, m_config.scaleFactY);
-	Canny(temp2, canny, m_config.cannyTh1, m_config.cannyTh2, 3, true);
+	cv::resize(grayImage, resizedImage, Size(0, 0), m_config.scaleFactX, m_config.scaleFactY);
+	Canny(resizedImage, canny, m_config.cannyTh1, m_config.cannyTh2, 3, true);
 	
 	Mat sm =  cv::getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
 	cv::morphologyEx(canny, canny, MORPH_CLOSE, sm);
@@ -122,7 +120,7 @@ uint8_t DiceDetection::getResult(uint32_t& dices, uint32_t& eyes)
 	return 0;
 }
 
-uint8_t DiceDetection::drawBoxes(cv::Mat& image)
+uint8_t DiceDetection::drawBoxes(Mat& image)
 {
 	for (auto d = m_dices.begin(); d != m_dices.end(); ++d) {
 
@@ -144,11 +142,11 @@ uint8_t DiceDetection::drawBoxes(cv::Mat& image)
 
 		// This is the basic box
 		Rect rc;
-		rc.x = minX - radius;	// Scan from left to right, then top bottom
-		rc.y = minY;			// So only subtract radius in x direction but not in y direction
+		rc.x = minX - radius;
+		rc.y = minY - radius;
 		rc.width  = maxX - minX + 2 * radius;
 		rc.height = maxY - minY + 2 * radius;
-		
+
 		// This is the maximum detection radius box
 		Rect rc2;
 		rc2.x = (int)(((rc.x + rc.width  / 2) - m_config.maxEyeDistance / 2) / m_config.scaleFactX);

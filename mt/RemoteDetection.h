@@ -26,12 +26,16 @@ namespace mt
 		RemoteDetection(RemoteDetectionConfig& config);
 		RemoteStatus getRemoteStatus(const colorDescription& desc, const cv::Mat& srcimage, uint8_t& buttonId);
 
+		void detectColoredButtons(const colorDescription& desc, const cv::Mat& srcimage, std::vector<cv::KeyPoint>& keypoints);
+		void detectContrastButtons(const colorDescription& desc, const cv::Mat& srcimage, std::vector<cv::KeyPoint>& keypoints);
+
 	private:
 
 		RemoteDetectionConfig&				m_config;
 		cv::SimpleBlobDetector::Params		m_sbdParams;
 		uint8_t								m_calibMarkerCount;
 		float								m_radiusTolerance;
+		cv::Mat								m_scaledImage;
 	};
 
 }

@@ -28,7 +28,7 @@ public:
 	DiceDetection(DiceDetectionConfig& config) :
 		m_config(config) {};
 
-	uint8_t processImage(const cv::Mat& sourceImage);
+	uint8_t processImage(const cv::Mat& grayImage);
 	uint8_t getResult(uint32_t& dices, uint32_t& eyes);
 	uint8_t drawBoxes(cv::Mat& image);
 

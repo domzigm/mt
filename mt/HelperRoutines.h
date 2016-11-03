@@ -13,7 +13,8 @@ namespace mt
 {
 
 float slope(cv::Vec4i points);
-void bwEdgeDetection(const cv::Mat& srcImage, cv::Mat& dstImage, bool useHls = false, double lowerThres = 3.f, double upperThresh = 252.f);
+void bwEdgeDetection(const cv::Mat& srcImage, cv::Mat& dstImage, bool useHls = false, bool useRGB = false, double lowerThres = 3.f, double upperThresh = 252.f);
+void bwEdgeDetection2(const cv::Mat& srcImage, cv::Mat& dstImage, bool useHls = false, bool useRGB = false, double lowerThres = 3.f, double upperThresh = 252.f);
 
 void inHsvRange(const cv::Mat& srcImage, const hsvPlanes& desc, cv::Mat& dstImage);
 void inHsvRange(const cv::Mat& srcImage, const colorDescription& desc, cv::Mat& dstImage);
